@@ -27,6 +27,14 @@
   [env name value]
   (assoc-in env [:defs name] value))
 
+(defn env-update
+  [env name value]
+  (if (contains? (:defs env) name)
+    (assoc-in env [:defs name] value)
+    (if (not (nil? (:parent env)))
+      (assoc env :parent (env-update (:parent env) name value))
+      (throw (ex-info (format "Undefined symbol: %s." name) {:symbol name})))))
+
 (def global-env (atom (predef-env)))
 
 (defn avalia
@@ -64,6 +72,12 @@
            updated-env (env-set env name evaluated-value)]
        (reset! global-env updated-env)
        [updated-env nil])
+     ;; Programação imperativa (set!)
+     [(['set! name value] :seq)]
+     (let [evaluated-value (avalia value env)
+           updated-env (env-update env name evaluated-value)]
+       (reset! global-env updated-env)
+       evaluated-value)
      ;; Aplicação
      [([rator rand] :seq)]
      (let [rator-val (avalia rator env)

@@ -14,3 +14,7 @@ x
 (def y 15)
 y
 (+ x y)
+(def z 20)
+z
+(set! z 10)
+z
